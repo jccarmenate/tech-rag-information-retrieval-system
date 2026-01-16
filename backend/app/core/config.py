@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "INFO"
     cors_origins: list[str] = ["http://localhost:5173"]
+    database_url: str = "sqlite:///./data/coderadar.db"
 
 
 @lru_cache
