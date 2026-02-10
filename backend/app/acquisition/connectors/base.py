@@ -20,6 +20,7 @@ class BaseConnector(ABC):
         self._client = httpx.Client(
             timeout=self.timeout_seconds,
             headers={"User-Agent": "CodeRadar/0.1 (+https://github.com/JuanCMath)"},
+            follow_redirects=True,
         )
 
     def __enter__(self) -> "BaseConnector":

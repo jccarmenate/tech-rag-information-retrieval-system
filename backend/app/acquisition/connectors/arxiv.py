@@ -4,7 +4,7 @@ from datetime import datetime
 from app.acquisition.connectors.base import BaseConnector
 from app.acquisition.schemas import RawDocument
 
-QUERY_URL = "http://export.arxiv.org/api/query"
+QUERY_URL = "https://export.arxiv.org/api/query"
 ATOM_NS = "{http://www.w3.org/2005/Atom}"
 
 
