@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.acquisition.scheduler import create_scheduler
 from app.api.routes import acquisition
 from app.core.config import get_settings
 from app.db.session import init_db
@@ -14,7 +15,10 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     init_db()
+    scheduler = create_scheduler()
+    scheduler.start()
     yield
+    scheduler.shutdown(wait=False)
 
 
 app = FastAPI(

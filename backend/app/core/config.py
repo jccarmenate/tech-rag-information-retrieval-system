@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_origins: list[str] = ["http://localhost:5173"]
     database_url: str = "sqlite:///./data/coderadar.db"
+    acquisition_interval_hours: float = 6.0
+    acquisition_limit_per_source: int = 20
+    github_token: str | None = None
 
 
 @lru_cache
