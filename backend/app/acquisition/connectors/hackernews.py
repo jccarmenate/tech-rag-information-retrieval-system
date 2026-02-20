@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from app.acquisition.connectors.base import BaseConnector
 from app.acquisition.schemas import RawDocument
@@ -31,4 +31,4 @@ class HackerNewsConnector(BaseConnector):
 def _parse_timestamp(value: int | None) -> datetime | None:
     if value is None:
         return None
-    return datetime.utcfromtimestamp(value)
+    return datetime.fromtimestamp(value, tz=UTC)

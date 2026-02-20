@@ -19,5 +19,5 @@ class Document(Base):
     image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     published_at: Mapped[datetime.datetime | None] = mapped_column(DateTime, nullable=True)
     fetched_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, default=datetime.datetime.utcnow
+        DateTime, default=lambda: datetime.datetime.now(datetime.UTC)
     )
