@@ -37,6 +37,12 @@ El sistema se construye como un pipeline modular:
 
 Este documento se irá actualizando a medida que cada módulo quede implementado.
 
+### Estado actual
+
+- ✅ **Adquisición de datos**: conectores para GitHub, Hacker News, Dev.to, Stack Overflow
+  y arXiv (`backend/app/acquisition/`), con deduplicación por URL, refresco periódico vía
+  APScheduler y disparo manual en `POST /api/acquisition/refresh`.
+
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).
