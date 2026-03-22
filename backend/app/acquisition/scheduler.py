@@ -5,6 +5,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.acquisition.service import IngestionResult, get_connectors, ingest_all
 from app.core.config import get_settings
 from app.db.session import SessionLocal
+from app.indexing.build_index import build_and_save
+from app.retrieval.service import reset_retriever_cache
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,8 @@ def run_once() -> IngestionResult:
         result = ingest_all(
             db, connectors=connectors, limit_per_source=settings.acquisition_limit_per_source
         )
+        build_and_save(db)
+        reset_retriever_cache()
         logger.info("acquisition run: %s", result)
         return result
     finally:
