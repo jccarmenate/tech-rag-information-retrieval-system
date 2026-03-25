@@ -42,6 +42,10 @@ Este documento se irá actualizando a medida que cada módulo quede implementado
 - ✅ **Adquisición de datos**: conectores para GitHub, Hacker News, Dev.to, Stack Overflow
   y arXiv (`backend/app/acquisition/`), con deduplicación por URL, refresco periódico vía
   APScheduler y disparo manual en `POST /api/acquisition/refresh`.
+- ✅ **Indexación**: índice invertido + TF-IDF propio (`backend/app/indexing/`),
+  reconstruido automáticamente después de cada refresco de adquisición.
+- ✅ **Recuperación (modelo no básico)**: Red de Inferencia Bayesiana
+  (`backend/app/retrieval/inference_network.py`), expuesta en `GET /api/search`.
 
 ## Licencia
 
