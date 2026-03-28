@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     acquisition_interval_hours: float = 6.0
     acquisition_limit_per_source: int = 20
     github_token: str | None = None
+    chroma_persist_dir: str = "data/chroma"
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
 
 
 @lru_cache
