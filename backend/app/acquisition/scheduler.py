@@ -7,6 +7,7 @@ from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.indexing.build_index import build_and_save
 from app.retrieval.service import reset_retriever_cache
+from app.vectorstore.build_store import sync_from_db
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ def run_once() -> IngestionResult:
         )
         build_and_save(db)
         reset_retriever_cache()
+        sync_from_db(db)
         logger.info("acquisition run: %s", result)
         return result
     finally:
