@@ -1,10 +1,16 @@
 import math
+import zlib
 
 from app.vectorstore.chroma_store import ChromaStore
 
 
 class _FakeEmbeddingModel:
-    """Deterministic bag-of-words hashing embedding, fast and offline for tests."""
+    """Deterministic bag-of-words hashing embedding, fast and offline for tests.
+
+    Uses zlib.crc32 instead of the builtin hash() because str hashing is
+    randomized per-process (PYTHONHASHSEED), which would make the "most
+    similar document" assertions below flaky across test runs.
+    """
 
     dims = 32
 
@@ -14,7 +20,7 @@ class _FakeEmbeddingModel:
     def encode_one(self, text: str) -> list[float]:
         vector = [0.0] * self.dims
         for word in text.lower().split():
-            vector[hash(word) % self.dims] += 1.0
+            vector[zlib.crc32(word.encode()) % self.dims] += 1.0
         norm = math.sqrt(sum(v * v for v in vector)) or 1.0
         return [v / norm for v in vector]
 
