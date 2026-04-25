@@ -46,6 +46,10 @@ Este documento se irá actualizando a medida que cada módulo quede implementado
   reconstruido automáticamente después de cada refresco de adquisición.
 - ✅ **Recuperación (modelo no básico)**: Red de Inferencia Bayesiana
   (`backend/app/retrieval/inference_network.py`), expuesta en `GET /api/search`.
+- ✅ **Base de datos vectorial**: ChromaDB persistente con embeddings de
+  `sentence-transformers` (`backend/app/vectorstore/`); los documentos largos se
+  fragmentan (`chunker.py`) antes de generar embeddings para no truncar contenido.
+  `GET /api/search?mode=vector` usa esta vía en paralelo a la Red de Inferencia.
 
 ## Licencia
 
