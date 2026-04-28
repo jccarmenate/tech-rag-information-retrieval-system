@@ -17,6 +17,15 @@ class Settings(BaseSettings):
     chroma_persist_dir: str = "data/chroma"
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
 
+    # RAG / LLM provider selection. "auto" uses Anthropic when an API key is
+    # configured and falls back to a local Ollama model otherwise, so a
+    # developer can iterate offline while a deployment just sets the key.
+    llm_provider: str = "auto"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1"
+    anthropic_api_key: str | None = None
+    anthropic_model: str = "claude-sonnet-5"
+
 
 @lru_cache
 def get_settings() -> Settings:
