@@ -18,6 +18,7 @@ dependencies = [
     "apscheduler>=3.10",
     "sentence-transformers>=3.0",
     "chromadb>=0.5",
+    "anthropic>=0.30",
 ]
 
 [project.optional-dependencies]
