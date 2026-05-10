@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy.orm import Session
 
 from app.db.models import Document
+from app.rag.citations import Citation, extract_citations
 from app.rag.llm_providers.base import LLMProvider
 from app.rag.prompts import SYSTEM_PROMPT, ContextChunk, build_prompt
 from app.retrieval.base import Retriever
@@ -15,6 +16,7 @@ class RagAnswer:
     query: str
     answer: str
     sources: list[ContextChunk]
+    citations: list[Citation]
 
 
 def _merge_hit_ids(*hit_lists: list, top_k: int) -> list[str]:
@@ -69,9 +71,11 @@ class RagPipeline:
                 query=query,
                 answer="I couldn't find any indexed sources relevant to this question.",
                 sources=[],
+                citations=[],
             )
 
         contexts = self._build_contexts(doc_ids)
         prompt = build_prompt(query, contexts)
         generated = self.llm_provider.generate(prompt, system=SYSTEM_PROMPT)
-        return RagAnswer(query=query, answer=generated, sources=contexts)
+        citations = extract_citations(generated, contexts)
+        return RagAnswer(query=query, answer=generated, sources=contexts, citations=citations)
