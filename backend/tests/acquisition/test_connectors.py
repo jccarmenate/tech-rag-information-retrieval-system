@@ -115,7 +115,9 @@ def test_stackexchange_connector_parses_questions():
 @respx.mock
 def test_arxiv_connector_parses_atom_feed():
     respx.get("https://export.arxiv.org/api/query").mock(
-        return_value=Response(200, text=ARXIV_ENTRY, headers={"content-type": "application/atom+xml"})
+        return_value=Response(
+            200, text=ARXIV_ENTRY, headers={"content-type": "application/atom+xml"}
+        )
     )
     with ArxivConnector() as connector:
         docs = connector.fetch(limit=10)

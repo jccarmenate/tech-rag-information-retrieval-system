@@ -34,9 +34,7 @@ def db_session():
     session = sessionmaker(bind=engine)()
     session.add_all(
         [
-            Document(
-                id="a", source="github", url="urlA", title="Repo A", text="Python ML library"
-            ),
+            Document(id="a", source="github", url="urlA", title="Repo A", text="Python ML library"),
             Document(
                 id="b", source="devto", url="urlB", title="Article B", text="Rust systems post"
             ),

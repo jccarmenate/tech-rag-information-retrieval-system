@@ -47,9 +47,7 @@ def test_ingest_all_updates_existing_documents(db_session):
 
 def test_ingest_all_isolates_connector_failures(db_session):
     good_doc = RawDocument.build(source="fake", url="https://x/2", title="T", text="body")
-    result = ingest_all(
-        db_session, connectors=[_FailingConnector(), _FakeConnector([good_doc])]
-    )
+    result = ingest_all(db_session, connectors=[_FailingConnector(), _FakeConnector([good_doc])])
 
     assert "broken" in result.errors
     assert result.new == 1
