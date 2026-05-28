@@ -50,6 +50,13 @@ Este documento se irá actualizando a medida que cada módulo quede implementado
   `sentence-transformers` (`backend/app/vectorstore/`); los documentos largos se
   fragmentan (`chunker.py`) antes de generar embeddings para no truncar contenido.
   `GET /api/search?mode=vector` usa esta vía en paralelo a la Red de Inferencia.
+- ✅ **RAG**: pipeline propio (`backend/app/rag/`) que combina evidencia de ambos
+  retrievers, genera una respuesta citada y extrae las citas usadas realmente en el
+  texto. Proveedor de LLM intercambiable: Ollama local por defecto, Anthropic si hay
+  `ANTHROPIC_API_KEY` configurada — sin tocar código (`GET /api/rag/answer`).
+- ✅ **Posicionamiento**: `Ranker` (`backend/app/ranking/`) fusiona relevancia +
+  recencia + autoridad de la fuente para decidir el orden final mostrado al usuario
+  en `GET /api/search`, sobre-muestreando candidatos antes de re-rankear.
 
 ## Licencia
 
