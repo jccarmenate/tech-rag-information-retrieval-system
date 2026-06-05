@@ -32,7 +32,7 @@ class IngestionResult(BaseModel):
     errors: dict[str, str] = {}
 
 
-def _upsert(db: Session, doc: RawDocument) -> bool:
+def upsert_document(db: Session, doc: RawDocument) -> bool:
     """Persists a RawDocument, returns True if it created a new row."""
     existing = db.get(Document, doc.id)
     if existing is None:
@@ -71,7 +71,7 @@ def ingest_all(
 
             result.fetched += len(docs)
             for doc in docs:
-                if _upsert(db, doc):
+                if upsert_document(db, doc):
                     result.new += 1
                 else:
                     result.updated += 1
