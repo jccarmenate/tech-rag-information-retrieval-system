@@ -9,6 +9,7 @@ from app.db.session import get_db
 from app.ranking.ranker import RankCandidate, Ranker
 from app.retrieval.base import RetrievalResult
 from app.retrieval.service import get_retriever, get_vector_retriever
+from app.web_search.pipeline import augment_if_needed
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
@@ -30,6 +31,7 @@ class SearchResultItem(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     mode: RetrievalMode
+    used_web_fallback: bool
     results: list[SearchResultItem]
 
 
@@ -81,5 +83,6 @@ def search(
     # over-fetch candidates so the ranker has real headroom to reorder by
     # recency/authority instead of just re-sorting an already-truncated top_k
     hits = retriever.search(q, top_k=top_k * 3)
+    hits, used_web_fallback = augment_if_needed(q, hits, db)
     results = _rank_and_hydrate(hits, db, top_k)
-    return SearchResponse(query=q, mode=mode, results=results)
+    return SearchResponse(query=q, mode=mode, used_web_fallback=used_web_fallback, results=results)

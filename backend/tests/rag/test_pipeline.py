@@ -1,5 +1,6 @@
 import pytest
 from app.db.models import Base, Document
+from app.rag import pipeline as pipeline_module
 from app.rag.pipeline import RagPipeline
 from app.retrieval.base import RetrievalResult
 from sqlalchemy import create_engine
@@ -45,6 +46,14 @@ def db_session():
     session.close()
 
 
+@pytest.fixture(autouse=True)
+def no_web_fallback(monkeypatch):
+    """Local retrieval is treated as always sufficient by default so tests
+    that aren't specifically about the web fallback never hit the network.
+    """
+    monkeypatch.setattr(pipeline_module, "augment_if_needed", lambda query, hits, db: (hits, False))
+
+
 def test_answer_merges_hits_from_both_retrievers_without_duplicates(db_session):
     inference = _FakeRetriever([RetrievalResult(doc_id="a", score=0.9)])
     vector = _FakeRetriever(
@@ -58,6 +67,7 @@ def test_answer_merges_hits_from_both_retrievers_without_duplicates(db_session):
     assert [s.doc_id for s in result.sources] == ["a", "b"]
     assert [c.doc_id for c in result.citations] == ["a", "b"]
     assert "[1]" in llm.last_prompt
+    assert result.used_web_fallback is False
 
 
 def test_answer_with_no_hits_skips_llm_call(db_session):
@@ -80,3 +90,18 @@ def test_answer_respects_top_k_across_merged_retrievers(db_session):
     result = pipeline.answer("query")
 
     assert len(result.sources) == 1
+
+
+def test_answer_uses_web_fallback_results_when_local_is_insufficient(db_session, monkeypatch):
+    monkeypatch.setattr(
+        pipeline_module,
+        "augment_if_needed",
+        lambda query, hits, db: (hits + [RetrievalResult(doc_id="a", score=0.5)], True),
+    )
+    llm = _FakeLLM("Answer from a web-augmented source [1].")
+
+    pipeline = RagPipeline(db_session, _FakeRetriever([]), _FakeRetriever([]), llm, top_k=5)
+    result = pipeline.answer("very fresh news query")
+
+    assert result.used_web_fallback is True
+    assert [s.doc_id for s in result.sources] == ["a"]

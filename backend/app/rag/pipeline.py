@@ -7,6 +7,7 @@ from app.rag.citations import Citation, extract_citations
 from app.rag.llm_providers.base import LLMProvider
 from app.rag.prompts import SYSTEM_PROMPT, ContextChunk, build_prompt
 from app.retrieval.base import Retriever
+from app.web_search.pipeline import augment_if_needed
 
 CONTEXT_CHARS = 800
 
@@ -17,6 +18,7 @@ class RagAnswer:
     answer: str
     sources: list[ContextChunk]
     citations: list[Citation]
+    used_web_fallback: bool
 
 
 def _merge_hit_ids(*hit_lists: list, top_k: int) -> list[str]:
@@ -64,7 +66,10 @@ class RagPipeline:
     def answer(self, query: str) -> RagAnswer:
         inference_hits = self.retriever.search(query, top_k=self.top_k)
         vector_hits = self.vector_retriever.search(query, top_k=self.top_k)
-        doc_ids = _merge_hit_ids(inference_hits, vector_hits, top_k=self.top_k)
+        combined_hits, used_web_fallback = augment_if_needed(
+            query, inference_hits + vector_hits, self.db
+        )
+        doc_ids = _merge_hit_ids(combined_hits, top_k=self.top_k)
 
         if not doc_ids:
             return RagAnswer(
@@ -72,10 +77,17 @@ class RagPipeline:
                 answer="I couldn't find any indexed sources relevant to this question.",
                 sources=[],
                 citations=[],
+                used_web_fallback=used_web_fallback,
             )
 
         contexts = self._build_contexts(doc_ids)
         prompt = build_prompt(query, contexts)
         generated = self.llm_provider.generate(prompt, system=SYSTEM_PROMPT)
         citations = extract_citations(generated, contexts)
-        return RagAnswer(query=query, answer=generated, sources=contexts, citations=citations)
+        return RagAnswer(
+            query=query,
+            answer=generated,
+            sources=contexts,
+            citations=citations,
+            used_web_fallback=used_web_fallback,
+        )

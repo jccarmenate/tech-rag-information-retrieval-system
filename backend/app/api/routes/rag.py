@@ -32,6 +32,7 @@ class RagAnswerResponse(BaseModel):
     answer: str
     citations: list[CitationOut]
     sources: list[SourceOut]
+    used_web_fallback: bool
 
 
 @router.get("/answer", response_model=RagAnswerResponse)
@@ -52,4 +53,5 @@ def answer(q: str, db: Annotated[Session, Depends(get_db)], top_k: int = 5) -> R
             SourceOut(doc_id=s.doc_id, title=s.title, url=s.url, source=s.source)
             for s in result.sources
         ],
+        used_web_fallback=result.used_web_fallback,
     )

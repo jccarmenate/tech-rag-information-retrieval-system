@@ -1,4 +1,5 @@
 from app.api.routes import rag as rag_route
+from app.rag import pipeline as pipeline_module
 from app.retrieval.base import RetrievalResult
 
 
@@ -22,6 +23,7 @@ def test_rag_answer_returns_generated_text_and_citations(client_with_docs, monke
     monkeypatch.setattr(rag_route, "get_retriever", lambda: _FakeRetriever())
     monkeypatch.setattr(rag_route, "get_vector_retriever", lambda: _EmptyRetriever())
     monkeypatch.setattr(rag_route, "get_llm_provider", lambda: _FakeLLM())
+    monkeypatch.setattr(pipeline_module, "augment_if_needed", lambda query, hits, db: (hits, False))
 
     response = client.get("/api/rag/answer", params={"q": "python for ml"})
 
@@ -37,6 +39,7 @@ def test_rag_answer_with_no_sources_returns_fallback_message(client_with_docs, m
     monkeypatch.setattr(rag_route, "get_retriever", lambda: _EmptyRetriever())
     monkeypatch.setattr(rag_route, "get_vector_retriever", lambda: _EmptyRetriever())
     monkeypatch.setattr(rag_route, "get_llm_provider", lambda: _FakeLLM())
+    monkeypatch.setattr(pipeline_module, "augment_if_needed", lambda query, hits, db: (hits, False))
 
     response = client.get("/api/rag/answer", params={"q": "nothing"})
 
