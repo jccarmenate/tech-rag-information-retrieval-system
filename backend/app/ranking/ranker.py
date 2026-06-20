@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from app.ranking.signals import authority_signal, recency_signal
 
-DEFAULT_WEIGHTS = {"relevance": 0.6, "recency": 0.25, "authority": 0.15}
+DEFAULT_WEIGHTS = {"relevance": 0.5, "recency": 0.2, "authority": 0.15, "feedback": 0.15}
 
 
 @dataclass
@@ -12,6 +12,7 @@ class RankCandidate:
     relevance: float  # retriever score, already normalized to [0, 1]
     source: str
     published_at: datetime.datetime | None
+    feedback: float = 0.5  # Laplace-smoothed positive-vote ratio, 0.5 = no feedback yet
 
 
 @dataclass
@@ -21,16 +22,18 @@ class RankedResult:
     relevance: float
     recency: float
     authority: float
+    feedback: float
 
 
 class Ranker:
-    """Fuses retrieval relevance with recency and source authority.
+    """Fuses retrieval relevance with recency, source authority and user feedback.
 
     This is the "posicionamiento" module: it decides the final order results
     are shown in, on top of whatever a retriever (inference network or
-    vector) considered relevant. Weights are configurable so the feedback
-    module (module de retroalimentación) can later learn/tune them from user
-    signal instead of using this fixed default.
+    vector) considered relevant. The feedback signal is what lets the
+    módulo de retroalimentación actually influence future rankings: a
+    document users have upvoted for similar queries gets a boost, one
+    they've downvoted gets pushed down.
     """
 
     def __init__(self, weights: dict[str, float] | None = None) -> None:
@@ -48,6 +51,7 @@ class Ranker:
                 self.weights["relevance"] * c.relevance
                 + self.weights["recency"] * recency
                 + self.weights["authority"] * authority
+                + self.weights["feedback"] * c.feedback
             )
             results.append(
                 RankedResult(
@@ -56,6 +60,7 @@ class Ranker:
                     relevance=c.relevance,
                     recency=recency,
                     authority=authority,
+                    feedback=c.feedback,
                 )
             )
         results.sort(key=lambda r: r.score, reverse=True)

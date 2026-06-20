@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Document
 from app.db.session import get_db
+from app.expansion.feedback_store import feedback_score
+from app.expansion.rocchio import expand_query
 from app.ranking.ranker import RankCandidate, Ranker
 from app.retrieval.base import RetrievalResult
 from app.retrieval.service import get_retriever, get_vector_retriever
@@ -30,6 +32,7 @@ class SearchResultItem(BaseModel):
 
 class SearchResponse(BaseModel):
     query: str
+    expanded_query: str | None
     mode: RetrievalMode
     used_web_fallback: bool
     results: list[SearchResultItem]
@@ -54,6 +57,7 @@ def _rank_and_hydrate(
             relevance=relevance,
             source=docs[doc_id].source,
             published_at=docs[doc_id].published_at,
+            feedback=feedback_score(db, doc_id),
         )
         for doc_id, relevance in relevance_by_id.items()
     ]
@@ -78,11 +82,25 @@ def search(
     db: Annotated[Session, Depends(get_db)],
     top_k: int = 10,
     mode: RetrievalMode = "inference_network",
+    expand: bool = False,
 ) -> SearchResponse:
     retriever = get_retriever() if mode == "inference_network" else get_vector_retriever()
+
+    expanded_query = None
+    search_query = q
+    if expand and mode == "inference_network":
+        expanded_query = expand_query(q, retriever, retriever.index)
+        search_query = expanded_query
+
     # over-fetch candidates so the ranker has real headroom to reorder by
     # recency/authority instead of just re-sorting an already-truncated top_k
-    hits = retriever.search(q, top_k=top_k * 3)
-    hits, used_web_fallback = augment_if_needed(q, hits, db)
+    hits = retriever.search(search_query, top_k=top_k * 3)
+    hits, used_web_fallback = augment_if_needed(search_query, hits, db)
     results = _rank_and_hydrate(hits, db, top_k)
-    return SearchResponse(query=q, mode=mode, used_web_fallback=used_web_fallback, results=results)
+    return SearchResponse(
+        query=q,
+        expanded_query=expanded_query,
+        mode=mode,
+        used_web_fallback=used_web_fallback,
+        results=results,
+    )

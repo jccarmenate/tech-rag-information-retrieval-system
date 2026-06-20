@@ -31,7 +31,9 @@ def test_custom_weights_change_ordering():
         RankCandidate(doc_id="relevant_old", relevance=0.95, source="devto", published_at=old),
         RankCandidate(doc_id="irrelevant_new", relevance=0.1, source="devto", published_at=now),
     ]
-    recency_focused = Ranker(weights={"relevance": 0.1, "recency": 0.8, "authority": 0.1})
+    recency_focused = Ranker(
+        weights={"relevance": 0.1, "recency": 0.8, "authority": 0.05, "feedback": 0.05}
+    )
     ranked = recency_focused.rank(candidates, now=now)
     assert ranked[0].doc_id == "irrelevant_new"
 
