@@ -55,8 +55,17 @@ Este documento se irá actualizando a medida que cada módulo quede implementado
   texto. Proveedor de LLM intercambiable: Ollama local por defecto, Anthropic si hay
   `ANTHROPIC_API_KEY` configurada — sin tocar código (`GET /api/rag/answer`).
 - ✅ **Posicionamiento**: `Ranker` (`backend/app/ranking/`) fusiona relevancia +
-  recencia + autoridad de la fuente para decidir el orden final mostrado al usuario
-  en `GET /api/search`, sobre-muestreando candidatos antes de re-rankear.
+  recencia + autoridad de la fuente + retroalimentación del usuario para decidir el
+  orden final mostrado en `GET /api/search`, sobre-muestreando candidatos antes de
+  re-rankear.
+- ✅ **Búsqueda web**: detección de insuficiencia multi-criterio (cantidad, calidad,
+  cobertura) que activa un fallback a DuckDuckGo cuando el corpus local no alcanza;
+  los resultados web se indexan y quedan disponibles para futuras consultas
+  (`backend/app/web_search/`).
+- ✅ **Expansión y retroalimentación**: expansión de consultas por pseudo-relevancia
+  (Rocchio) y sinónimos (WordNet) en `GET /api/search?expand=true`
+  (`backend/app/expansion/`), más `POST /api/feedback` (👍/👎) cuyo puntaje agregado
+  alimenta al `Ranker`.
 
 ## Licencia
 
