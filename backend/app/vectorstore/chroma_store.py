@@ -53,11 +53,17 @@ class ChromaStore:
         )
 
     def query(self, text: str, top_k: int = 10) -> list[VectorHit]:
+        return self.query_by_vector(self._embedder.encode_one(text), top_k=top_k)
+
+    def query_by_vector(self, embedding: list[float], top_k: int = 10) -> list[VectorHit]:
+        """Same aggregation as `query`, but for a caller-supplied embedding —
+        used by the recommendation module to search from a user-profile
+        vector instead of a text query.
+        """
         count = self._collection.count()
         if count == 0:
             return []
 
-        embedding = self._embedder.encode_one(text)
         n_results = min(count, max(top_k * 5, top_k))
         result = self._collection.query(query_embeddings=[embedding], n_results=n_results)
 
@@ -70,3 +76,14 @@ class ChromaStore:
 
         ranked = sorted(best_per_doc.items(), key=lambda kv: kv[1], reverse=True)
         return [VectorHit(doc_id=doc_id, similarity=sim) for doc_id, sim in ranked[:top_k]]
+
+    def get_document_embedding(self, doc_id: str) -> list[float] | None:
+        """Averages a document's chunk embeddings into one vector, e.g. to
+        seed a user profile from documents they liked.
+        """
+        result = self._collection.get(where={"doc_id": doc_id}, include=["embeddings"])
+        embeddings = result.get("embeddings")
+        if embeddings is None or len(embeddings) == 0:
+            return None
+        dims = len(embeddings[0])
+        return [sum(vec[i] for vec in embeddings) / len(embeddings) for i in range(dims)]
