@@ -36,6 +36,7 @@ class Feedback(Base):
     query: Mapped[str] = mapped_column(String(512))
     doc_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
     vote: Mapped[int] = mapped_column(Integer)  # +1 (relevant) or -1 (not relevant)
+    user_id: Mapped[str] = mapped_column(String(128), default="anonymous", index=True)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, default=lambda: datetime.datetime.now(datetime.UTC)
     )
