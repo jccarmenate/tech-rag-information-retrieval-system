@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.acquisition.scheduler import create_scheduler
-from app.api.routes import acquisition, feedback, multimodal, rag, search
+from app.api.routes import acquisition, feedback, multimodal, rag, recommendation, search
 from app.core.config import get_settings
 from app.db.session import init_db
 
@@ -40,6 +40,7 @@ app.include_router(search.router)
 app.include_router(rag.router)
 app.include_router(feedback.router)
 app.include_router(multimodal.router)
+app.include_router(recommendation.router)
 
 
 @app.get("/health")
