@@ -66,6 +66,13 @@ Este documento se irá actualizando a medida que cada módulo quede implementado
   (Rocchio) y sinónimos (WordNet) en `GET /api/search?expand=true`
   (`backend/app/expansion/`), más `POST /api/feedback` (👍/👎) cuyo puntaje agregado
   alimenta al `Ranker`.
+- ✅ **Multimodal**: imágenes asociadas a los documentos (portadas, avatares) se
+  embeben con CLIP en una colección Chroma independiente; `GET /api/multimodal/search`
+  permite buscar imágenes a partir de una consulta de texto plano
+  (`backend/app/multimodal/`).
+- ✅ **Recomendación**: sistema híbrido — perfil de embeddings del usuario
+  (content-based) combinado con co-visitación entre consultas (colaborativo ligero) —
+  en `GET /api/recommendations` (`backend/app/recommendation/`).
 
 ## Licencia
 
