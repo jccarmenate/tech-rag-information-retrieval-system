@@ -1,0 +1,17 @@
+[
+  {"query": "python async programming with coroutines", "relevant_doc_ids": ["d01"]},
+  {"query": "rust memory safety without a garbage collector", "relevant_doc_ids": ["d02"]},
+  {"query": "kubernetes pod deployment rolling updates", "relevant_doc_ids": ["d03"]},
+  {"query": "how does self-attention work in transformers", "relevant_doc_ids": ["d04"]},
+  {"query": "difference between git rebase and merge", "relevant_doc_ids": ["d05"]},
+  {"query": "docker image size optimization multi-stage build", "relevant_doc_ids": ["d06"]},
+  {"query": "react useState useEffect hooks", "relevant_doc_ids": ["d07"]},
+  {"query": "postgresql index types for search queries", "relevant_doc_ids": ["d08", "d20"]},
+  {"query": "pytest fixtures for test setup and teardown", "relevant_doc_ids": ["d09"]},
+  {"query": "tf-idf cosine similarity document ranking", "relevant_doc_ids": ["d10", "d20"]},
+  {"query": "retrieval augmented generation grounding llm answers", "relevant_doc_ids": ["d11"]},
+  {"query": "vector database approximate nearest neighbor search", "relevant_doc_ids": ["d12"]},
+  {"query": "bayesian inference network document ranking model", "relevant_doc_ids": ["d21"]},
+  {"query": "text to image embeddings CLIP", "relevant_doc_ids": ["d22"]},
+  {"query": "kubernetes service discovery and networking", "relevant_doc_ids": ["d15"]}
+]
