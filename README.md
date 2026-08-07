@@ -73,6 +73,12 @@ Este documento se irá actualizando a medida que cada módulo quede implementado
 - ✅ **Recomendación**: sistema híbrido — perfil de embeddings del usuario
   (content-based) combinado con co-visitación entre consultas (colaborativo ligero) —
   en `GET /api/recommendations` (`backend/app/recommendation/`).
+- ✅ **Evaluación**: métricas clásicas de RI (Precision@k, Recall@k, MAP, MRR, nDCG)
+  contra un corpus y qrels propios y congelados (`backend/data/evaluation/`) para que
+  los resultados sean reproducibles, más evaluación de fidelidad del RAG (cobertura de
+  citas + LLM-as-judge reutilizando el mismo `LLMProvider`). Corre con
+  `python scripts/evaluate.py` o `POST /api/evaluation/run`
+  (`backend/app/evaluation/`).
 
 ## Licencia
 
