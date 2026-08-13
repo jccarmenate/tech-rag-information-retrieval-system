@@ -1,0 +1,30 @@
+.filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  padding: var(--space-3) 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.filters__field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filters__field select {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.filters__checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
