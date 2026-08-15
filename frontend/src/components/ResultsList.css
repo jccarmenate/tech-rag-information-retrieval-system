@@ -1,0 +1,20 @@
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.results-list__empty {
+  color: var(--color-text-muted);
+  padding: var(--space-6) 0;
+  text-align: center;
+}
+
+.results-list__notice {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
