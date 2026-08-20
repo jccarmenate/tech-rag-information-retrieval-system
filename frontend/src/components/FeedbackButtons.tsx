@@ -6,9 +6,10 @@ interface FeedbackButtonsProps {
   query: string
   docId: string
   userId: string
+  onVoted?: () => void
 }
 
-export function FeedbackButtons({ query, docId, userId }: FeedbackButtonsProps) {
+export function FeedbackButtons({ query, docId, userId, onVoted }: FeedbackButtonsProps) {
   const [vote, setVote] = useState<1 | -1 | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -18,6 +19,7 @@ export function FeedbackButtons({ query, docId, userId }: FeedbackButtonsProps) 
     try {
       await submitFeedback(query, docId, nextVote, userId)
       setVote(nextVote)
+      if (nextVote === 1) onVoted?.()
     } catch {
       // feedback is a nice-to-have signal; a failed request shouldn't
       // interrupt the user's search session

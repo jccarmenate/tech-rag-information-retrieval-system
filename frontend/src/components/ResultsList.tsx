@@ -7,9 +7,16 @@ interface ResultsListProps {
   query: string
   userId: string
   usedWebFallback: boolean
+  onVoted?: () => void
 }
 
-export function ResultsList({ results, query, userId, usedWebFallback }: ResultsListProps) {
+export function ResultsList({
+  results,
+  query,
+  userId,
+  usedWebFallback,
+  onVoted,
+}: ResultsListProps) {
   if (results.length === 0) {
     return <p className="results-list__empty">No results yet. Try a search above.</p>
   }
@@ -29,6 +36,7 @@ export function ResultsList({ results, query, userId, usedWebFallback }: Results
           position={index + 1}
           query={query}
           userId={userId}
+          onVoted={onVoted}
         />
       ))}
     </div>

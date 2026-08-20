@@ -7,6 +7,7 @@ interface ResultCardProps {
   position: number
   query: string
   userId: string
+  onVoted?: () => void
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -18,7 +19,7 @@ const SOURCE_LABELS: Record<string, string> = {
   web: 'Web',
 }
 
-export function ResultCard({ result, position, query, userId }: ResultCardProps) {
+export function ResultCard({ result, position, query, userId, onVoted }: ResultCardProps) {
   const isTopResult = position <= 3
 
   return (
@@ -52,7 +53,12 @@ export function ResultCard({ result, position, query, userId }: ResultCardProps)
               style={{ width: `${Math.min(result.score * 100, 100)}%` }}
             />
           </div>
-          <FeedbackButtons query={query} docId={result.doc_id} userId={userId} />
+          <FeedbackButtons
+            query={query}
+            docId={result.doc_id}
+            userId={userId}
+            onVoted={onVoted}
+          />
         </div>
       </div>
     </article>
