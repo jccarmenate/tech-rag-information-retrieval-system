@@ -79,3 +79,19 @@
   height: 100%;
   background: var(--color-accent);
 }
+
+@media (max-width: 520px) {
+  .result-card {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .result-card__footer {
+    flex-wrap: wrap;
+  }
+
+  .result-card__score-bar {
+    flex-basis: 100%;
+    order: 2;
+  }
+}

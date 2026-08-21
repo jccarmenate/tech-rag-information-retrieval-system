@@ -32,3 +32,9 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 520px) {
+  .search-bar {
+    flex-direction: column;
+  }
+}
