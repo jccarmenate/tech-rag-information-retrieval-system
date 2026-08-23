@@ -1,84 +1,193 @@
 # CodeRadar
 
-Sistema de Recuperación de Información (SRI) con Retrieval-Augmented Generation (RAG)
-para el dominio de tecnología y software.
+**Sistema de Recuperación de Información (SRI) con RAG para el dominio de tecnología y
+software.** Busca y sintetiza información técnica actual —repos de GitHub, hilos de Hacker
+News y Stack Overflow, artículos de Dev.to, papers de arXiv— y responde preguntas del
+usuario con RAG, citando siempre las fuentes recuperadas.
 
-> Estado: en desarrollo inicial. Este README se irá ampliando a medida que avancen los
-> módulos (adquisición, indexación, recuperación, RAG, ranking, interfaz, evaluación...).
+Proyecto personal construido desde cero como pieza de portfolio: cada módulo de la
+arquitectura (adquisición, indexación, recuperación, RAG, posicionamiento, interfaz,
+búsqueda web, expansión/retroalimentación, multimodal, recomendación, evaluación) es una
+implementación propia, sin frameworks de orquestación de por medio.
 
-## Idea
+## Arquitectura
 
-Buscar, indexar y sintetizar información técnica actual (repos de GitHub, discusiones de
-Hacker News y Stack Overflow, artículos de Dev.to, papers de arXiv) y responder preguntas
-del usuario con respuestas generadas por RAG, citando las fuentes recuperadas.
+```mermaid
+flowchart LR
+    subgraph Fuentes["Fuentes"]
+        GH["GitHub"]
+        HN["Hacker News"]
+        DT["Dev.to"]
+        SE["Stack Overflow"]
+        AX["arXiv"]
+    end
 
-## Arquitectura (planeada)
+    Fuentes --> ACQ["Adquisición<br/>APScheduler"]
+    ACQ --> DB[("SQLite")]
+    WS["Búsqueda web<br/>fallback"] -. corpus insuficiente .-> ACQ
 
-El sistema se construye como un pipeline modular:
+    DB --> IDX["Índice invertido<br/>+ TF-IDF"]
+    DB --> VEC[("ChromaDB<br/>embeddings")]
 
-1. **Adquisición** — conectores contra APIs de GitHub, Hacker News, Dev.to, Stack Exchange
-   y arXiv, con refresco periódico.
-2. **Indexación** — índice invertido + TF-IDF propio sobre el corpus adquirido.
-3. **Recuperación** — modelo de Redes de Inferencia Bayesianas (no un vectorial básico)
-   sobre el índice.
-4. **Base vectorial** — embeddings semánticos persistidos en ChromaDB, como segunda vía de
-   recuperación y soporte del RAG.
-5. **RAG** — combina evidencia de recuperación + vectorial para generar respuestas citadas,
-   con proveedor de LLM intercambiable (Ollama local / Anthropic API).
-6. **Posicionamiento** — fusiona señales (relevancia, similitud, recencia, feedback) para
-   ordenar los resultados mostrados al usuario.
-7. **Interfaz** — SPA en React donde se lanza la consulta y se visualizan resultados y
-   respuesta generada.
-8. **Búsqueda web** — fallback automático cuando el corpus local no cubre la consulta.
-9. **Expansión y feedback** — mejora consultas y aprende de las señales de los usuarios.
-10. **Multimodal** — incorpora imágenes asociadas a los documentos al espacio de búsqueda.
-11. **Recomendación** — sugiere contenido relacionado según perfil e historial.
-12. **Evaluación** — métricas clásicas de RI y de fidelidad del RAG.
+    IDX --> IN["Red de Inferencia<br/>Bayesiana"]
+    VEC --> VR["Retriever<br/>vectorial"]
+    EXP["Expansión<br/>Rocchio + WordNet"] --> IN
 
-Este documento se irá actualizando a medida que cada módulo quede implementado.
+    IN --> RANK["Ranker<br/>relevancia + recencia + autoridad + feedback"]
+    VR --> RANK
+    RANK --> API
 
-### Estado actual
+    IN --> RAG["Pipeline RAG"]
+    VR --> RAG
+    RAG --> LLM{"Ollama / Anthropic"}
+    RAG --> API["FastAPI"]
 
-- ✅ **Adquisición de datos**: conectores para GitHub, Hacker News, Dev.to, Stack Overflow
-  y arXiv (`backend/app/acquisition/`), con deduplicación por URL, refresco periódico vía
-  APScheduler y disparo manual en `POST /api/acquisition/refresh`.
-- ✅ **Indexación**: índice invertido + TF-IDF propio (`backend/app/indexing/`),
-  reconstruido automáticamente después de cada refresco de adquisición.
-- ✅ **Recuperación (modelo no básico)**: Red de Inferencia Bayesiana
-  (`backend/app/retrieval/inference_network.py`), expuesta en `GET /api/search`.
-- ✅ **Base de datos vectorial**: ChromaDB persistente con embeddings de
-  `sentence-transformers` (`backend/app/vectorstore/`); los documentos largos se
-  fragmentan (`chunker.py`) antes de generar embeddings para no truncar contenido.
-  `GET /api/search?mode=vector` usa esta vía en paralelo a la Red de Inferencia.
-- ✅ **RAG**: pipeline propio (`backend/app/rag/`) que combina evidencia de ambos
-  retrievers, genera una respuesta citada y extrae las citas usadas realmente en el
-  texto. Proveedor de LLM intercambiable: Ollama local por defecto, Anthropic si hay
-  `ANTHROPIC_API_KEY` configurada — sin tocar código (`GET /api/rag/answer`).
-- ✅ **Posicionamiento**: `Ranker` (`backend/app/ranking/`) fusiona relevancia +
-  recencia + autoridad de la fuente + retroalimentación del usuario para decidir el
-  orden final mostrado en `GET /api/search`, sobre-muestreando candidatos antes de
-  re-rankear.
-- ✅ **Búsqueda web**: detección de insuficiencia multi-criterio (cantidad, calidad,
-  cobertura) que activa un fallback a DuckDuckGo cuando el corpus local no alcanza;
-  los resultados web se indexan y quedan disponibles para futuras consultas
-  (`backend/app/web_search/`).
-- ✅ **Expansión y retroalimentación**: expansión de consultas por pseudo-relevancia
-  (Rocchio) y sinónimos (WordNet) en `GET /api/search?expand=true`
-  (`backend/app/expansion/`), más `POST /api/feedback` (👍/👎) cuyo puntaje agregado
-  alimenta al `Ranker`.
-- ✅ **Multimodal**: imágenes asociadas a los documentos (portadas, avatares) se
-  embeben con CLIP en una colección Chroma independiente; `GET /api/multimodal/search`
-  permite buscar imágenes a partir de una consulta de texto plano
-  (`backend/app/multimodal/`).
-- ✅ **Recomendación**: sistema híbrido — perfil de embeddings del usuario
-  (content-based) combinado con co-visitación entre consultas (colaborativo ligero) —
-  en `GET /api/recommendations` (`backend/app/recommendation/`).
-- ✅ **Evaluación**: métricas clásicas de RI (Precision@k, Recall@k, MAP, MRR, nDCG)
-  contra un corpus y qrels propios y congelados (`backend/data/evaluation/`) para que
-  los resultados sean reproducibles, más evaluación de fidelidad del RAG (cobertura de
-  citas + LLM-as-judge reutilizando el mismo `LLMProvider`). Corre con
-  `python scripts/evaluate.py` o `POST /api/evaluation/run`
-  (`backend/app/evaluation/`).
+    VEC --> IMG["Imágenes CLIP"]
+    IMG --> API
+    DB --> REC["Recomendación<br/>híbrida"]
+    REC --> API
+
+    API --> UI["SPA React"]
+    UI -->|"👍/👎"| FB[("Feedback")]
+    FB --> RANK
+    FB --> REC
+```
+
+### Módulos
+
+| # | Módulo | Implementación |
+|---|---|---|
+| 1 | Adquisición de datos | Conectores a 5 APIs (GitHub, HN, Dev.to, StackExchange, arXiv) + refresco periódico con APScheduler — [`backend/app/acquisition/`](backend/app/acquisition/) |
+| 2 | Indexación | Índice invertido + TF-IDF propio — [`backend/app/indexing/`](backend/app/indexing/) |
+| 3 | Recuperador (no básico) | **Red de Inferencia Bayesiana** (Turtle & Croft, 1991), noisy-OR sobre nodos documento→término→consulta — [`inference_network.py`](backend/app/retrieval/inference_network.py) |
+| 4 | Base de datos vectorial | ChromaDB persistente, embeddings `sentence-transformers`, chunking para no truncar documentos largos — [`backend/app/vectorstore/`](backend/app/vectorstore/) |
+| 5 | RAG | Pipeline propio: fusiona ambos retrievers, genera respuesta citada, proveedor de LLM intercambiable (Ollama / Anthropic) — [`backend/app/rag/`](backend/app/rag/) |
+| 6 | Posicionamiento | `Ranker` fusiona relevancia + recencia + autoridad de fuente + feedback agregado — [`backend/app/ranking/`](backend/app/ranking/) |
+| 7 | Interfaz visual | SPA en React + TypeScript: badges de posición, panel de respuesta con citas, filtros — [`frontend/`](frontend/) |
+| 8 | Búsqueda web | Detección de insuficiencia (cantidad/calidad/cobertura) → fallback DuckDuckGo, resultados indexados para consultas futuras — [`backend/app/web_search/`](backend/app/web_search/) |
+| 9 | Expansión y retroalimentación | Rocchio (pseudo-relevancia) + sinónimos WordNet; feedback 👍/👎 que alimenta el ranking — [`backend/app/expansion/`](backend/app/expansion/) |
+| 10 | Multimodal | Imágenes embebidas con CLIP en una colección Chroma independiente, búsqueda texto→imagen — [`backend/app/multimodal/`](backend/app/multimodal/) |
+| 11 | Recomendación | Híbrido content-based (perfil de embeddings) + colaborativo (co-visitación) — [`backend/app/recommendation/`](backend/app/recommendation/) |
+| 12 | Evaluación | Precision@k, Recall@k, MAP, MRR, nDCG contra qrels propios y congelados + fidelidad del RAG (LLM-as-judge) — [`backend/app/evaluation/`](backend/app/evaluation/) |
+
+## Stack técnico
+
+- **Backend**: Python 3.11+, FastAPI, SQLAlchemy + SQLite, ChromaDB, sentence-transformers, APScheduler
+- **Frontend**: React 19, TypeScript, Vite
+- **LLM**: Ollama (local, por defecto) o Anthropic Claude (con `ANTHROPIC_API_KEY`) — intercambiables sin tocar código
+- **Tests**: pytest (backend, 130+ tests) y Vitest + React Testing Library (frontend)
+- **CI**: GitHub Actions (lint + tests en cada push, backend y frontend por separado)
+
+## Puesta en marcha
+
+### Opción A — Docker Compose (todo junto)
+
+```bash
+docker compose up --build
+```
+
+Esto levanta backend (`:8000`), frontend (`:8080`) y un contenedor de Ollama (`:11434`).
+La primera vez, descarga un modelo en el contenedor de Ollama:
+
+```bash
+docker compose exec ollama ollama pull llama3.1
+```
+
+Para usar Anthropic en vez de Ollama, define `ANTHROPIC_API_KEY` en el entorno antes de
+levantar los contenedores (o en un `.env` en la raíz) — el backend detecta la key
+automáticamente.
+
+### Opción B — Manual (desarrollo)
+
+**Backend**
+
+```bash
+cd backend
+python -m venv .venv && .venv/Scripts/activate  # o source .venv/bin/activate en Unix
+pip install -e ".[dev]"
+cp .env.example .env
+uvicorn app.main:app --reload
+```
+
+**Frontend**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+El proxy de Vite reenvía `/api/*` a `http://localhost:8000`, así que basta con abrir
+`http://localhost:5173`.
+
+### Ollama local (opcional, para RAG sin costo)
+
+```bash
+ollama serve
+ollama pull llama3.1
+```
+
+Sin `ANTHROPIC_API_KEY` configurada, el backend usa Ollama automáticamente
+(`LLM_PROVIDER=auto`, el valor por defecto).
+
+## Evaluación
+
+```bash
+python scripts/evaluate.py
+```
+
+Corre las métricas clásicas de RI contra un corpus y qrels propios y congelados
+(`backend/data/evaluation/`), para que los números sean reproducibles independientemente
+del estado del corpus adquirido en vivo. También disponible como `POST
+/api/evaluation/run`.
+
+## Tests
+
+```bash
+# backend
+cd backend && pytest
+
+# frontend
+cd frontend && npm test
+```
+
+## Referencia rápida de la API
+
+| Endpoint | Descripción |
+|---|---|
+| `GET /api/search` | Búsqueda con `mode` (`inference_network`/`vector`), `expand`, ranking aplicado |
+| `GET /api/rag/answer` | Respuesta generada por RAG con citas |
+| `GET /api/multimodal/search` | Búsqueda de imágenes por texto (CLIP) |
+| `GET /api/recommendations` | Recomendaciones para un `user_id` |
+| `POST /api/feedback` | Registra un voto 👍/👎 |
+| `POST /api/acquisition/refresh` | Dispara adquisición + reindexado manualmente |
+| `POST /api/evaluation/run` | Corre la evaluación de RI |
+
+## Estructura del proyecto
+
+```
+CodeRadar/
+├── backend/
+│   └── app/
+│       ├── acquisition/     # conectores + scheduler
+│       ├── indexing/        # índice invertido + TF-IDF
+│       ├── retrieval/       # Red de Inferencia + retriever vectorial
+│       ├── vectorstore/     # ChromaDB + embeddings + chunking
+│       ├── rag/             # pipeline RAG + proveedores LLM
+│       ├── ranking/         # fusión de señales
+│       ├── web_search/      # fallback + insuficiencia
+│       ├── expansion/       # Rocchio + WordNet + feedback
+│       ├── multimodal/      # CLIP + imágenes
+│       ├── recommendation/  # content-based + colaborativo
+│       ├── evaluation/      # métricas RI + fidelidad RAG
+│       ├── api/routes/      # endpoints FastAPI
+│       └── db/              # modelos SQLAlchemy
+├── frontend/src/
+│   ├── api/                 # cliente tipado
+│   └── components/          # SearchBar, ResultCard, RagAnswerPanel...
+├── scripts/                 # build_index.py, evaluate.py
+└── docker-compose.yml
+```
 
 ## Licencia
 
