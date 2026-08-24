@@ -1,9 +1,13 @@
+import logging
+
 from sqlalchemy.orm import Session
 
 from app.retrieval.base import RetrievalResult
 from app.web_search.indexer import index_web_results
 from app.web_search.insufficiency import check_sufficiency
 from app.web_search.searcher import search_web
+
+logger = logging.getLogger(__name__)
 
 # Web hits are indexed on the spot but not yet folded into the persisted
 # inverted index / vector store (that happens on the next acquisition
@@ -25,7 +29,14 @@ def augment_if_needed(
     if not report.insufficient:
         return hits, False
 
-    web_results = search_web(query, max_results=max_web_results)
+    try:
+        web_results = search_web(query, max_results=max_web_results)
+    except Exception as exc:
+        # DuckDuckGo being unreachable/rate-limited must degrade to the local
+        # results, not take down the whole search request.
+        logger.warning("web search fallback failed for %r: %s", query, exc)
+        return hits, False
+
     if not web_results:
         return hits, False
 
