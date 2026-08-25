@@ -75,7 +75,7 @@ flowchart LR
 - **Backend**: Python 3.11+, FastAPI, SQLAlchemy + SQLite, ChromaDB, sentence-transformers, APScheduler
 - **Frontend**: React 19, TypeScript, Vite
 - **LLM**: Ollama (local, por defecto) o Anthropic Claude (con `ANTHROPIC_API_KEY`) — intercambiables sin tocar código
-- **Tests**: pytest (backend, 130+ tests) y Vitest + React Testing Library (frontend)
+- **Tests**: pytest (backend, 120+ tests) y Vitest + React Testing Library (frontend)
 - **CI**: GitHub Actions (lint + tests en cada push, backend y frontend por separado)
 
 ## Puesta en marcha
