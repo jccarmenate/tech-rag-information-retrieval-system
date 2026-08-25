@@ -9,7 +9,6 @@
 
 .result-card--top {
   border-color: var(--color-accent);
-  background: linear-gradient(180deg, var(--color-accent-soft), var(--color-surface) 40%);
 }
 
 .result-card__position {
