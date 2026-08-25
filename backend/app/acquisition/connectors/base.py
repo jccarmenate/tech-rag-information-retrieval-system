@@ -19,7 +19,12 @@ class BaseConnector(ABC):
     def __init__(self) -> None:
         self._client = httpx.Client(
             timeout=self.timeout_seconds,
-            headers={"User-Agent": "CodeRadar/0.1 (+https://github.com/JuanCMath)"},
+            headers={
+                "User-Agent": (
+                    "tech-rag-information-retrieval-system/0.1 "
+                    "(+https://github.com/JuanCMath/tech-rag-information-retrieval-system)"
+                )
+            },
             follow_redirects=True,
         )
 

@@ -6,7 +6,7 @@ services:
     volumes:
       - backend-data:/app/data
     environment:
-      - DATABASE_URL=sqlite:///./data/coderadar.db
+      - DATABASE_URL=sqlite:///./data/app.db
       - CHROMA_PERSIST_DIR=data/chroma
       # Leave ANTHROPIC_API_KEY unset to use the local Ollama service below,
       # or set it (and LLM_PROVIDER=anthropic) to use Claude instead.

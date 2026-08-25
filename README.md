@@ -1,4 +1,4 @@
-# CodeRadar
+# Tech RAG Information Retrieval System
 
 **Sistema de Recuperación de Información (SRI) con RAG para el dominio de tecnología y
 software.** Busca y sintetiza información técnica actual —repos de GitHub, hilos de Hacker
@@ -166,7 +166,7 @@ cd frontend && npm test
 ## Estructura del proyecto
 
 ```
-CodeRadar/
+tech-rag-information-retrieval-system/
 ├── backend/
 │   └── app/
 │       ├── acquisition/     # conectores + scheduler

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const STORAGE_KEY = 'coderadar_user_id'
+const STORAGE_KEY = 'ir_system_user_id'
 
 function createUserId(): string {
   return `guest-${Math.random().toString(36).slice(2, 10)}`

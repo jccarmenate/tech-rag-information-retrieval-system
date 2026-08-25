@@ -58,8 +58,11 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__logo">CodeRadar</h1>
-        <p className="app__tagline">Search + RAG for the technology and software domain</p>
+        <h1 className="app__logo">Tech RAG Information Retrieval System</h1>
+        <p className="app__tagline">
+          Search + Retrieval-Augmented Generation over GitHub, Hacker News, Dev.to, Stack
+          Overflow and arXiv
+        </p>
       </header>
 
       <div className="app__search-area">

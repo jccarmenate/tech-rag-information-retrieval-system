@@ -1,7 +1,7 @@
-# CodeRadar frontend
+# Frontend
 
-React + TypeScript + Vite SPA for CodeRadar. See the [project README](../README.md) for
-the full architecture and setup instructions.
+React + TypeScript + Vite SPA for the Tech RAG Information Retrieval System. See the
+[project README](../README.md) for the full architecture and setup instructions.
 
 ```bash
 npm install
