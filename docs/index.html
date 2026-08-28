@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech RAG Information Retrieval System</title>
+<meta name="description" content="Information Retrieval system with RAG for the technology/software domain — every module built from scratch: Bayesian inference network, vector search, multimodal CLIP search, and RAG with a swappable LLM provider.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e14; --card:#131822; --border:#232a38;
+    --text:#e7ecf5; --text-dim:#98a3ba; --text-faint:#5d6883;
+    --accent:#5eb4ff; --accent-2:#c9a6ff; --accent-3:#7ee0c4;
+    --code-bg:#0d121b;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f6f8fc; --card:#ffffff; --border:#e1e6f0;
+      --text:#131822; --text-dim:#49536b; --text-faint:#8993ab;
+      --accent:#1f6fd6; --accent-2:#7a4fd6; --accent-3:#0f9a78;
+      --code-bg:#eef1f8;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; line-height:1.6}
+  code,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px 80px}
+  header{padding:72px 0 36px; text-align:center}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace;
+    font-size:12.5px; letter-spacing:.04em; color:var(--accent-3);
+    background:rgba(126,224,196,.08); border:1px solid rgba(126,224,196,.25);
+    border-radius:999px; padding:5px 14px; margin-bottom:22px;
+  }
+  h1{font-size:clamp(26px,4.6vw,40px); font-weight:800; margin:0 0 14px; letter-spacing:-0.02em}
+  .tagline{font-size:18px; color:var(--text-dim); max-width:680px; margin:0 auto 12px}
+  .subnote{font-size:14px; color:var(--text-faint); max-width:640px; margin:0 auto 28px}
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:10px; font-weight:600; font-size:14.5px; text-decoration:none; border:1px solid var(--border)}
+  .btn-primary{background:var(--accent); color:#0a0e14; border-color:var(--accent)}
+  .btn-ghost{color:var(--text); background:var(--card)}
+  section{margin-top:60px}
+  h2{font-size:22px; font-weight:700; margin:0 0 20px; letter-spacing:-0.01em}
+  .diagram{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px}
+  .diagram svg{display:block; width:100%; height:auto}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px}
+  .card .num{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent-3)}
+  .card h3{margin:6px 0 8px; font-size:14.5px; font-weight:700; color:var(--accent)}
+  .card p{margin:0; font-size:13.5px; color:var(--text-dim)}
+  .stack{display:flex; flex-wrap:wrap; gap:8px}
+  .pill{font-family:'JetBrains Mono',monospace; font-size:12.5px; background:var(--code-bg); border:1px solid var(--border); color:var(--text-dim); padding:6px 11px; border-radius:8px}
+  .api{width:100%; border-collapse:collapse; font-size:13px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden}
+  .api th,.api td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--border)}
+  .api th{color:var(--text-faint); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em}
+  .api tr:last-child td{border-bottom:none}
+  .api td:first-child{font-family:'JetBrains Mono',monospace; color:var(--accent); white-space:nowrap}
+  footer{margin-top:80px; padding-top:28px; border-top:1px solid var(--border); text-align:center; color:var(--text-faint); font-size:13.5px}
+  footer a{color:var(--text-dim)}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">● 12 modules, every one built from scratch — no orchestration framework</span>
+    <h1>Tech RAG Information Retrieval System</h1>
+    <p class="tagline">An Information Retrieval system with RAG for the technology/software domain — searches and synthesizes current technical information from GitHub, Hacker News, Stack Overflow, Dev.to, and arXiv, and answers questions with cited, retrieved sources.</p>
+    <p class="subnote">Personal portfolio project: acquisition, indexing, retrieval, RAG, ranking, UI, web search, expansion/feedback, multimodal, and recommendation are each implemented from first principles.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/jccarmenate/tech-rag-information-retrieval-system">View source on GitHub →</a>
+      <a class="btn btn-ghost" href="#pipeline">Pipeline</a>
+    </div>
+  </header>
+
+  <section id="pipeline">
+    <h2>Query pipeline</h2>
+    <div class="diagram">
+      <svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--text-faint)"></path>
+          </marker>
+        </defs>
+        <style>
+          .box{fill:var(--code-bg); stroke:var(--border); stroke-width:1.5; rx:10}
+          .lbl{font-family:'Inter',sans-serif; font-size:13px; font-weight:600; fill:var(--text)}
+          .sub{font-family:'JetBrains Mono',monospace; font-size:10px; fill:var(--text-faint)}
+          .flow{stroke:var(--accent); stroke-width:2; fill:none; marker-end:url(#arrow)}
+          .flow2{stroke:var(--accent-2); stroke-width:2; fill:none; marker-end:url(#arrow); stroke-dasharray:4 3}
+        </style>
+
+        <rect class="box" x="10" y="30" width="140" height="54"></rect>
+        <text class="lbl" x="80" y="52" text-anchor="middle">Query</text>
+        <text class="sub" x="80" y="68" text-anchor="middle">user question</text>
+
+        <rect class="box" x="200" y="10" width="150" height="54"></rect>
+        <text class="lbl" x="275" y="32" text-anchor="middle">Inference Network</text>
+        <text class="sub" x="275" y="48" text-anchor="middle">Bayesian, noisy-OR</text>
+
+        <rect class="box" x="200" y="80" width="150" height="54"></rect>
+        <text class="lbl" x="275" y="102" text-anchor="middle">Vector Retriever</text>
+        <text class="sub" x="275" y="118" text-anchor="middle">ChromaDB + embeddings</text>
+
+        <rect class="box" x="400" y="45" width="140" height="54"></rect>
+        <text class="lbl" x="470" y="67" text-anchor="middle">Ranking</text>
+        <text class="sub" x="470" y="83" text-anchor="middle">relevance+recency+authority</text>
+
+        <rect class="box" x="590" y="45" width="140" height="54"></rect>
+        <text class="lbl" x="660" y="67" text-anchor="middle">RAG</text>
+        <text class="sub" x="660" y="83" text-anchor="middle">Ollama / Claude</text>
+
+        <rect class="box" x="780" y="45" width="110" height="54"></rect>
+        <text class="lbl" x="835" y="67" text-anchor="middle">Cited answer</text>
+
+        <rect class="box" x="400" y="150" width="140" height="54"></rect>
+        <text class="lbl" x="470" y="172" text-anchor="middle">Web search</text>
+        <text class="sub" x="470" y="188" text-anchor="middle">on insufficiency</text>
+
+        <rect class="box" x="200" y="220" width="150" height="54"></rect>
+        <text class="lbl" x="275" y="242" text-anchor="middle">Expansion</text>
+        <text class="sub" x="275" y="258" text-anchor="middle">Rocchio + WordNet</text>
+
+        <rect class="box" x="400" y="220" width="140" height="54"></rect>
+        <text class="lbl" x="470" y="242" text-anchor="middle">Feedback 👍👎</text>
+        <text class="sub" x="470" y="258" text-anchor="middle">feeds back into ranking</text>
+
+        <path class="flow" d="M150,57 C175,57 175,37 200,37"></path>
+        <path class="flow" d="M150,57 C175,57 175,107 200,107"></path>
+        <path class="flow" d="M350,37 C375,37 375,60 400,68"></path>
+        <path class="flow" d="M350,107 C375,107 375,80 400,72"></path>
+        <path class="flow" d="M540,72 L590,72"></path>
+        <path class="flow" d="M730,72 L780,72"></path>
+        <path class="flow2" d="M470,99 L470,150"></path>
+        <path class="flow2" d="M540,177 C565,177 565,110 540,90"></path>
+        <path class="flow2" d="M350,247 L400,247"></path>
+        <path class="flow2" d="M470,220 C470,190 350,190 275,220"></path>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <h2>Modules</h2>
+    <div class="grid">
+      <div class="card"><span class="num">01</span><h3>Data acquisition</h3><p>5 API connectors (GitHub, HN, Dev.to, StackExchange, arXiv) + periodic refresh via APScheduler.</p></div>
+      <div class="card"><span class="num">02</span><h3>Indexing</h3><p>Custom inverted index + TF-IDF, built from scratch.</p></div>
+      <div class="card"><span class="num">03</span><h3>Inference network retriever</h3><p>Bayesian Inference Network (Turtle & Croft, 1991), noisy-OR over document→term→query nodes.</p></div>
+      <div class="card"><span class="num">04</span><h3>Vector database</h3><p>Persistent ChromaDB, sentence-transformer embeddings, chunked so long docs aren't truncated.</p></div>
+      <div class="card"><span class="num">05</span><h3>RAG</h3><p>Fuses both retrievers, generates a cited answer, swappable LLM provider (Ollama / Anthropic).</p></div>
+      <div class="card"><span class="num">06</span><h3>Ranking</h3><p>Fuses relevance, recency, source authority, and aggregated feedback.</p></div>
+      <div class="card"><span class="num">07</span><h3>UI</h3><p>React + TypeScript SPA — rank badges, cited-answer panel, filters.</p></div>
+      <div class="card"><span class="num">08</span><h3>Web search fallback</h3><p>Insufficiency detection (volume/quality/coverage) → DuckDuckGo, results indexed for future queries.</p></div>
+      <div class="card"><span class="num">09</span><h3>Expansion & feedback</h3><p>Rocchio pseudo-relevance + WordNet synonyms; 👍/👎 feedback loops back into ranking.</p></div>
+      <div class="card"><span class="num">10</span><h3>Multimodal</h3><p>Images embedded with CLIP in a separate Chroma collection — text→image search.</p></div>
+      <div class="card"><span class="num">11</span><h3>Recommendation</h3><p>Hybrid content-based (embedding profile) + collaborative (co-visitation).</p></div>
+      <div class="card"><span class="num">12</span><h3>Evaluation</h3><p>Precision@k, Recall@k, MAP, MRR, nDCG against frozen qrels, plus RAG faithfulness (LLM-as-judge).</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>API quick reference</h2>
+    <table class="api">
+      <tr><th>Endpoint</th><th>Description</th></tr>
+      <tr><td>GET /api/search</td><td>Search with mode (inference_network/vector), expand, ranking applied</td></tr>
+      <tr><td>GET /api/rag/answer</td><td>RAG-generated answer with citations</td></tr>
+      <tr><td>GET /api/multimodal/search</td><td>Image search by text (CLIP)</td></tr>
+      <tr><td>GET /api/recommendations</td><td>Recommendations for a user_id</td></tr>
+      <tr><td>POST /api/feedback</td><td>Records a 👍/👎 vote</td></tr>
+      <tr><td>POST /api/evaluation/run</td><td>Runs the IR evaluation suite</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Tech stack</h2>
+    <div class="stack">
+      <span class="pill">Python 3.11+</span><span class="pill">FastAPI</span><span class="pill">SQLAlchemy + SQLite</span><span class="pill">ChromaDB</span>
+      <span class="pill">sentence-transformers</span><span class="pill">APScheduler</span><span class="pill">React 19</span><span class="pill">TypeScript</span>
+      <span class="pill">Vite</span><span class="pill">Ollama / Claude</span>
+    </div>
+  </section>
+
+  <footer>
+    MIT licensed · <a href="https://github.com/jccarmenate/tech-rag-information-retrieval-system">jccarmenate/tech-rag-information-retrieval-system</a> · built by Juan Carlos
+  </footer>
+</div>
+</body>
+</html>
