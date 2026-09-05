@@ -12,6 +12,17 @@ architecture (acquisition, indexing, retrieval, RAG, ranking, UI, web search,
 expansion/feedback, multimodal, recommendation, evaluation) is a from-scratch
 implementation, with no orchestration framework in between.
 
+## Screenshots
+
+Search with ranked results, related images, and a cited RAG answer, plus personalized
+recommendations after a couple of 👍 votes:
+
+![Search results with RAG answer, images, and recommendations](docs/screenshots/search-overview.png)
+
+Close-up of the generated answer with clickable, numbered citations:
+
+![RAG answer panel with citations](docs/screenshots/rag-answer.png)
+
 ## Architecture
 
 ```mermaid

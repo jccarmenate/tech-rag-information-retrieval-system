@@ -12,6 +12,17 @@ arquitectura (adquisición, indexación, recuperación, RAG, posicionamiento, in
 búsqueda web, expansión/retroalimentación, multimodal, recomendación, evaluación) es una
 implementación propia, sin frameworks de orquestación de por medio.
 
+## Capturas
+
+Búsqueda con resultados rankeados, imágenes relacionadas y respuesta RAG citada, más
+recomendaciones personalizadas después de un par de votos 👍:
+
+![Resultados de búsqueda con respuesta RAG, imágenes y recomendaciones](docs/screenshots/search-overview.png)
+
+Detalle de la respuesta generada con citas numeradas y clickeables:
+
+![Panel de respuesta RAG con citas](docs/screenshots/rag-answer.png)
+
 ## Arquitectura
 
 ```mermaid
