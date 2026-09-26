@@ -57,6 +57,7 @@ export function ResultCard({ result, position, query, userId, onVoted }: ResultC
             query={query}
             docId={result.doc_id}
             userId={userId}
+            relevance={result.relevance}
             onVoted={onVoted}
           />
         </div>

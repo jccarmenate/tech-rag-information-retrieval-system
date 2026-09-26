@@ -50,9 +50,17 @@ export function getRecommendations(userId: string, topK = 8) {
   return request<RecommendationResponse>(`/api/recommendations?${params}`)
 }
 
-export function submitFeedback(query: string, docId: string, vote: 1 | -1, userId: string) {
+/** `relevance` is the retriever score the user saw; sending it turns the vote
+ * into a training example for the backend's learning-to-rank model. */
+export function submitFeedback(
+  query: string,
+  docId: string,
+  vote: 1 | -1,
+  userId: string,
+  relevance?: number,
+) {
   return request<FeedbackResponse>('/api/feedback', {
     method: 'POST',
-    body: JSON.stringify({ query, doc_id: docId, vote, user_id: userId }),
+    body: JSON.stringify({ query, doc_id: docId, vote, user_id: userId, relevance }),
   })
 }

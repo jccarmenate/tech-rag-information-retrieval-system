@@ -6,10 +6,17 @@ interface FeedbackButtonsProps {
   query: string
   docId: string
   userId: string
+  relevance?: number
   onVoted?: () => void
 }
 
-export function FeedbackButtons({ query, docId, userId, onVoted }: FeedbackButtonsProps) {
+export function FeedbackButtons({
+  query,
+  docId,
+  userId,
+  relevance,
+  onVoted,
+}: FeedbackButtonsProps) {
   const [vote, setVote] = useState<1 | -1 | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -17,7 +24,7 @@ export function FeedbackButtons({ query, docId, userId, onVoted }: FeedbackButto
     if (pending || vote === nextVote) return
     setPending(true)
     try {
-      await submitFeedback(query, docId, nextVote, userId)
+      await submitFeedback(query, docId, nextVote, userId, relevance)
       setVote(nextVote)
       if (nextVote === 1) onVoted?.()
     } catch {

@@ -4,17 +4,19 @@ import * as apiClient from '../api/client'
 import { FeedbackButtons } from './FeedbackButtons'
 
 describe('FeedbackButtons', () => {
-  it('submits an upvote and calls onVoted', async () => {
+  it('submits an upvote with the shown relevance and calls onVoted', async () => {
     const submitSpy = vi
       .spyOn(apiClient, 'submitFeedback')
       .mockResolvedValue({ id: 1, query: 'q', doc_id: 'doc-1', vote: 1, user_id: 'u1' })
     const onVoted = vi.fn()
 
-    render(<FeedbackButtons query="q" docId="doc-1" userId="u1" onVoted={onVoted} />)
+    render(
+      <FeedbackButtons query="q" docId="doc-1" userId="u1" relevance={0.42} onVoted={onVoted} />,
+    )
     fireEvent.click(screen.getByTitle('Relevant'))
 
     await waitFor(() => expect(onVoted).toHaveBeenCalled())
-    expect(submitSpy).toHaveBeenCalledWith('q', 'doc-1', 1, 'u1')
+    expect(submitSpy).toHaveBeenCalledWith('q', 'doc-1', 1, 'u1', 0.42)
   })
 
   it('does not call onVoted for a downvote', async () => {
