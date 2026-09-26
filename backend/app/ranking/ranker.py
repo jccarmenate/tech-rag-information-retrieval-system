@@ -1,9 +1,8 @@
 import datetime
 from dataclasses import dataclass
 
+from app.ranking.ltr import RankingModel, prior_model
 from app.ranking.signals import authority_signal, recency_signal
-
-DEFAULT_WEIGHTS = {"relevance": 0.5, "recency": 0.2, "authority": 0.15, "feedback": 0.15}
 
 
 @dataclass
@@ -30,14 +29,14 @@ class Ranker:
 
     This is the "posicionamiento" module: it decides the final order results
     are shown in, on top of whatever a retriever (inference network or
-    vector) considered relevant. The feedback signal is what lets the
-    módulo de retroalimentación actually influence future rankings: a
-    document users have upvoted for similar queries gets a boost, one
-    they've downvoted gets pushed down.
+    vector) considered relevant. How much each signal counts is not hand-set:
+    the weights come from a logistic model trained on users' 👍/👎 votes
+    (see `ranking/ltr.py`), starting from — and regularised toward — a
+    hand-set prior until enough votes exist.
     """
 
-    def __init__(self, weights: dict[str, float] | None = None) -> None:
-        self.weights = weights or DEFAULT_WEIGHTS
+    def __init__(self, model: RankingModel | None = None) -> None:
+        self.model = model or prior_model()
 
     def rank(
         self, candidates: list[RankCandidate], now: datetime.datetime | None = None
@@ -47,16 +46,16 @@ class Ranker:
         for c in candidates:
             recency = recency_signal(c.published_at, now=now)
             authority = authority_signal(c.source)
-            score = (
-                self.weights["relevance"] * c.relevance
-                + self.weights["recency"] * recency
-                + self.weights["authority"] * authority
-                + self.weights["feedback"] * c.feedback
-            )
+            features = {
+                "relevance": c.relevance,
+                "recency": recency,
+                "authority": authority,
+                "feedback": c.feedback,
+            }
             results.append(
                 RankedResult(
                     doc_id=c.doc_id,
-                    score=score,
+                    score=self.model.score(features),
                     relevance=c.relevance,
                     recency=recency,
                     authority=authority,

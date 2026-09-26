@@ -15,6 +15,9 @@ class FeedbackRequest(BaseModel):
     doc_id: str
     vote: Literal[1, -1]
     user_id: str = "anonymous"
+    # Retriever score of the result when it was shown; lets the vote double
+    # as a learning-to-rank training example.
+    relevance: float | None = None
 
 
 class FeedbackResponse(BaseModel):
@@ -30,7 +33,12 @@ def submit_feedback(
     payload: FeedbackRequest, db: Annotated[Session, Depends(get_db)]
 ) -> FeedbackResponse:
     feedback = record_feedback(
-        db, payload.query, payload.doc_id, payload.vote, user_id=payload.user_id
+        db,
+        payload.query,
+        payload.doc_id,
+        payload.vote,
+        user_id=payload.user_id,
+        relevance=payload.relevance,
     )
     return FeedbackResponse(
         id=feedback.id,

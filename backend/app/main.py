@@ -11,6 +11,7 @@ from app.api.routes import (
     feedback,
     multimodal,
     rag,
+    ranking,
     recommendation,
     search,
 )
@@ -50,6 +51,7 @@ app.include_router(feedback.router)
 app.include_router(multimodal.router)
 app.include_router(recommendation.router)
 app.include_router(evaluation.router)
+app.include_router(ranking.router)
 
 
 @app.get("/health")

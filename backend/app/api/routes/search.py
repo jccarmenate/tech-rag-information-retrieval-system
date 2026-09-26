@@ -8,7 +8,8 @@ from app.db.models import Document
 from app.db.session import get_db
 from app.expansion.feedback_store import feedback_score
 from app.expansion.rocchio import expand_query
-from app.ranking.ranker import RankCandidate, Ranker
+from app.ranking.ranker import RankCandidate
+from app.ranking.service import get_ranker
 from app.retrieval.base import RetrievalResult
 from app.retrieval.service import get_retriever, get_vector_retriever
 from app.web_search.pipeline import augment_if_needed
@@ -17,15 +18,13 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 RetrievalMode = Literal["inference_network", "vector"]
 
-_ranker = Ranker()
-
 
 class SearchResultItem(BaseModel):
     doc_id: str
     title: str
     url: str
     source: str
-    score: float  # final position score (relevance + recency + authority)
+    score: float  # LTR model's P(relevant), used for the final order
     relevance: float  # raw retriever score, before ranking
     snippet: str
 
@@ -61,7 +60,7 @@ def _rank_and_hydrate(
         )
         for doc_id, relevance in relevance_by_id.items()
     ]
-    ranked = _ranker.rank(candidates)[:top_k]
+    ranked = get_ranker(db).rank(candidates)[:top_k]
     return [
         SearchResultItem(
             doc_id=r.doc_id,

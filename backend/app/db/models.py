@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -26,8 +26,9 @@ class Document(Base):
 class Feedback(Base):
     """A user's thumbs up/down on one search result for one query.
 
-    Feeds both the ranking module (`ranking/signals.py`) and the
-    recommendation module's implicit signal.
+    Each vote is a labelled training example for the learning-to-rank model
+    (`ranking/ltr.py`), so it also stores the ranking features the result had
+    when the user saw it. It also feeds the recommendation module.
     """
 
     __tablename__ = "feedback"
@@ -37,6 +38,11 @@ class Feedback(Base):
     doc_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
     vote: Mapped[int] = mapped_column(Integer)  # +1 (relevant) or -1 (not relevant)
     user_id: Mapped[str] = mapped_column(String(128), default="anonymous", index=True)
+    # Feature snapshot at vote time; null for votes cast without one, which
+    # are then left out of LTR training.
+    relevance: Mapped[float | None] = mapped_column(Float, nullable=True)
+    recency: Mapped[float | None] = mapped_column(Float, nullable=True)
+    authority: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, default=lambda: datetime.datetime.now(datetime.UTC)
     )

@@ -1,5 +1,6 @@
 import datetime
 
+from app.ranking.ltr import RankingModel
 from app.ranking.ranker import RankCandidate, Ranker
 
 
@@ -24,18 +25,28 @@ def test_relevance_weight_dominates_by_default():
     assert ranked[0].doc_id == "relevant_old"
 
 
-def test_custom_weights_change_ordering():
+def test_a_different_model_changes_ordering():
     now = datetime.datetime.now(datetime.UTC)
     old = now - datetime.timedelta(days=365)
     candidates = [
         RankCandidate(doc_id="relevant_old", relevance=0.95, source="devto", published_at=old),
         RankCandidate(doc_id="irrelevant_new", relevance=0.1, source="devto", published_at=now),
     ]
-    recency_focused = Ranker(
-        weights={"relevance": 0.1, "recency": 0.8, "authority": 0.05, "feedback": 0.05}
+    recency_focused = RankingModel(
+        weights={"relevance": 0.5, "recency": 4.0, "authority": 0.3, "feedback": 0.3}, bias=-2.0
     )
-    ranked = recency_focused.rank(candidates, now=now)
+    ranked = Ranker(recency_focused).rank(candidates, now=now)
     assert ranked[0].doc_id == "irrelevant_new"
+
+
+def test_scores_are_probabilities():
+    now = datetime.datetime.now(datetime.UTC)
+    candidates = [
+        RankCandidate(doc_id="a", relevance=1.0, source="arxiv", published_at=now, feedback=1.0),
+        RankCandidate(doc_id="b", relevance=0.0, source="unknown", published_at=None, feedback=0.0),
+    ]
+    for result in Ranker().rank(candidates, now=now):
+        assert 0.0 < result.score < 1.0
 
 
 def test_rank_returns_component_scores():

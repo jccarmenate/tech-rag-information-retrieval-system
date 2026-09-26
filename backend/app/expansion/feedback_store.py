@@ -1,15 +1,32 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.db.models import Feedback
+from app.db.models import Document, Feedback
+from app.ranking.signals import authority_signal, recency_signal
 
 
 def record_feedback(
-    db: Session, query: str, doc_id: str, vote: int, user_id: str = "anonymous"
+    db: Session,
+    query: str,
+    doc_id: str,
+    vote: int,
+    user_id: str = "anonymous",
+    relevance: float | None = None,
 ) -> Feedback:
+    """Stores a vote. When the caller passes the retriever `relevance` the
+    user saw, the vote also becomes a learning-to-rank training example, so
+    the other ranking features are snapshotted alongside it.
+    """
     if vote not in (1, -1):
         raise ValueError("vote must be 1 (relevant) or -1 (not relevant)")
     feedback = Feedback(query=query, doc_id=doc_id, vote=vote, user_id=user_id)
+
+    document = db.get(Document, doc_id)
+    if relevance is not None and document is not None:
+        feedback.relevance = min(max(relevance, 0.0), 1.0)
+        feedback.recency = recency_signal(document.published_at)
+        feedback.authority = authority_signal(document.source)
+
     db.add(feedback)
     db.commit()
     db.refresh(feedback)
