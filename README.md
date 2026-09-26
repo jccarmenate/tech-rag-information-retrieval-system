@@ -46,7 +46,7 @@ flowchart LR
     VEC --> VR["Vector<br/>retriever"]
     EXP["Expansion<br/>Rocchio + WordNet"] --> IN
 
-    IN --> RANK["Ranker<br/>relevance + recency + authority + feedback"]
+    IN --> RANK["Learned ranker (LTR)<br/>relevance + recency + authority + feedback"]
     VR --> RANK
     RANK --> API
 
@@ -75,7 +75,7 @@ flowchart LR
 | 3 | Retriever (non-basic) | **Bayesian Inference Network** (Turtle & Croft, 1991), noisy-OR over document→term→query nodes — [`inference_network.py`](backend/app/retrieval/inference_network.py) |
 | 4 | Vector database | Persistent ChromaDB, `sentence-transformers` embeddings, chunking so long documents aren't truncated — [`backend/app/vectorstore/`](backend/app/vectorstore/) |
 | 5 | RAG | Custom pipeline: fuses both retrievers, generates a cited answer, swappable LLM provider (Ollama / Anthropic) — [`backend/app/rag/`](backend/app/rag/) |
-| 6 | Ranking | `Ranker` fuses relevance + recency + source authority + aggregated feedback — [`backend/app/ranking/`](backend/app/ranking/) |
+| 6 | Ranking | Pointwise learning-to-rank: a logistic model over relevance, recency, source authority and aggregated feedback, trained on 👍/👎 votes and regularized toward hand-set prior weights (so it behaves like them until enough votes exist) — [`backend/app/ranking/`](backend/app/ranking/) |
 | 7 | UI | React + TypeScript SPA: rank badges, cited-answer panel, filters — [`frontend/`](frontend/) |
 | 8 | Web search | Insufficiency detection (volume/quality/coverage) → DuckDuckGo fallback, results indexed for future queries — [`backend/app/web_search/`](backend/app/web_search/) |
 | 9 | Expansion and feedback | Rocchio (pseudo-relevance) + WordNet synonyms; 👍/👎 feedback that feeds back into ranking — [`backend/app/expansion/`](backend/app/expansion/) |
@@ -88,7 +88,7 @@ flowchart LR
 - **Backend**: Python 3.11+, FastAPI, SQLAlchemy + SQLite, ChromaDB, sentence-transformers, APScheduler
 - **Frontend**: React 19, TypeScript, Vite
 - **LLM**: Ollama (local, default) or Anthropic Claude (with `ANTHROPIC_API_KEY`) — swappable without touching code
-- **Tests**: pytest (backend, 120+ tests) and Vitest + React Testing Library (frontend)
+- **Tests**: pytest (backend, 130+ tests) and Vitest + React Testing Library (frontend)
 - **CI**: GitHub Actions (lint + tests on every push, backend and frontend separately)
 
 ## Getting started
@@ -172,7 +172,8 @@ cd frontend && npm test
 | `GET /api/rag/answer` | RAG-generated answer with citations |
 | `GET /api/multimodal/search` | Image search by text (CLIP) |
 | `GET /api/recommendations` | Recommendations for a `user_id` |
-| `POST /api/feedback` | Records a 👍/👎 vote |
+| `POST /api/feedback` | Records a 👍/👎 vote (a training example for the ranker) |
+| `GET /api/ranking/model` | Learned ranking weights vs. the prior, and in-sample log-loss |
 | `POST /api/acquisition/refresh` | Manually triggers acquisition + reindexing |
 | `POST /api/evaluation/run` | Runs the IR evaluation |
 
@@ -187,7 +188,7 @@ tech-rag-information-retrieval-system/
 │       ├── retrieval/       # inference network + vector retriever
 │       ├── vectorstore/     # ChromaDB + embeddings + chunking
 │       ├── rag/             # RAG pipeline + LLM providers
-│       ├── ranking/         # signal fusion
+│       ├── ranking/         # learning-to-rank over the ranking signals
 │       ├── web_search/      # fallback + insufficiency detection
 │       ├── expansion/       # Rocchio + WordNet + feedback
 │       ├── multimodal/      # CLIP + images

@@ -46,7 +46,7 @@ flowchart LR
     VEC --> VR["Retriever<br/>vectorial"]
     EXP["Expansión<br/>Rocchio + WordNet"] --> IN
 
-    IN --> RANK["Ranker<br/>relevancia + recencia + autoridad + feedback"]
+    IN --> RANK["Ranker aprendido (LTR)<br/>relevancia + recencia + autoridad + feedback"]
     VR --> RANK
     RANK --> API
 
@@ -75,7 +75,7 @@ flowchart LR
 | 3 | Recuperador (no básico) | **Red de Inferencia Bayesiana** (Turtle & Croft, 1991), noisy-OR sobre nodos documento→término→consulta — [`inference_network.py`](backend/app/retrieval/inference_network.py) |
 | 4 | Base de datos vectorial | ChromaDB persistente, embeddings `sentence-transformers`, chunking para no truncar documentos largos — [`backend/app/vectorstore/`](backend/app/vectorstore/) |
 | 5 | RAG | Pipeline propio: fusiona ambos retrievers, genera respuesta citada, proveedor de LLM intercambiable (Ollama / Anthropic) — [`backend/app/rag/`](backend/app/rag/) |
-| 6 | Posicionamiento | `Ranker` fusiona relevancia + recencia + autoridad de fuente + feedback agregado — [`backend/app/ranking/`](backend/app/ranking/) |
+| 6 | Posicionamiento | Learning-to-rank pointwise: modelo logístico sobre relevancia, recencia, autoridad de fuente y feedback agregado, entrenado con los votos 👍/👎 y regularizado hacia pesos iniciales definidos a mano (se comporta como ellos hasta que hay suficientes votos) — [`backend/app/ranking/`](backend/app/ranking/) |
 | 7 | Interfaz visual | SPA en React + TypeScript: badges de posición, panel de respuesta con citas, filtros — [`frontend/`](frontend/) |
 | 8 | Búsqueda web | Detección de insuficiencia (cantidad/calidad/cobertura) → fallback DuckDuckGo, resultados indexados para consultas futuras — [`backend/app/web_search/`](backend/app/web_search/) |
 | 9 | Expansión y retroalimentación | Rocchio (pseudo-relevancia) + sinónimos WordNet; feedback 👍/👎 que alimenta el ranking — [`backend/app/expansion/`](backend/app/expansion/) |
@@ -88,7 +88,7 @@ flowchart LR
 - **Backend**: Python 3.11+, FastAPI, SQLAlchemy + SQLite, ChromaDB, sentence-transformers, APScheduler
 - **Frontend**: React 19, TypeScript, Vite
 - **LLM**: Ollama (local, por defecto) o Anthropic Claude (con `ANTHROPIC_API_KEY`) — intercambiables sin tocar código
-- **Tests**: pytest (backend, 120+ tests) y Vitest + React Testing Library (frontend)
+- **Tests**: pytest (backend, 130+ tests) y Vitest + React Testing Library (frontend)
 - **CI**: GitHub Actions (lint + tests en cada push, backend y frontend por separado)
 
 ## Puesta en marcha
@@ -172,7 +172,8 @@ cd frontend && npm test
 | `GET /api/rag/answer` | Respuesta generada por RAG con citas |
 | `GET /api/multimodal/search` | Búsqueda de imágenes por texto (CLIP) |
 | `GET /api/recommendations` | Recomendaciones para un `user_id` |
-| `POST /api/feedback` | Registra un voto 👍/👎 |
+| `POST /api/feedback` | Registra un voto 👍/👎 (ejemplo de entrenamiento para el ranker) |
+| `GET /api/ranking/model` | Pesos aprendidos del ranker vs. el prior, y log-loss in-sample |
 | `POST /api/acquisition/refresh` | Dispara adquisición + reindexado manualmente |
 | `POST /api/evaluation/run` | Corre la evaluación de RI |
 
@@ -187,7 +188,7 @@ tech-rag-information-retrieval-system/
 │       ├── retrieval/       # Red de Inferencia + retriever vectorial
 │       ├── vectorstore/     # ChromaDB + embeddings + chunking
 │       ├── rag/             # pipeline RAG + proveedores LLM
-│       ├── ranking/         # fusión de señales
+│       ├── ranking/         # learning-to-rank sobre las señales de ranking
 │       ├── web_search/      # fallback + insuficiencia
 │       ├── expansion/       # Rocchio + WordNet + feedback
 │       ├── multimodal/      # CLIP + imágenes
